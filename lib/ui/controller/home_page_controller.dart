@@ -8,21 +8,14 @@ import '../../common/patterns/result.dart';
 import '../../domain/entity/transaction_entity.dart';
 
 class HomePageController {
-  // HomePageController({required TransactionRepositoryContract repo})
-  // : _repo = repo {
-  HomePageController({
-    required TransactionFacadeUseCases transactionsUseCases,
-    // required GetAllTransactionsUseCaseImpl getAllTransactions,
-    // required GetTransactionUseCaseImpl getTransaction,
-  }) : _transactionsUseCases = transactionsUseCases {
-    //  _getAllTransactions = getAllTransactions,
-    //  _getTransaction = getTransaction,
+  HomePageController({required TransactionFacadeUseCases transactionsUseCases})
+    : _transactionsUseCases = transactionsUseCases {
     load = Command0(_loadTransactions);
     searchTransactionsByDate = Command2(_searchTransactionsByDate);
     saveTransaction = Command1(_saveTransaction);
     undoDelectedTransaction = Command1(_undoDelectedTransaction);
     deleteTransaction = Command1(_deleteTransaction);
-    //loadSample = Command0<void, void>(_resetToSample);
+    updateTransaction = Command1(_updateTransaction);
     incomes = Computed(
       () =>
           _transactions.value
@@ -52,10 +45,7 @@ class HomePageController {
     balance = Computed(() => totalIncome.value - totalExpense.value);
   }
 
-  //final TransactionRepositoryContract _repo;
   final TransactionFacadeUseCases _transactionsUseCases;
-  // final GetAllTransactionsUseCaseImpl _getAllTransactions;
-  // final GetTransactionUseCaseImpl _getTransaction;
 
   // commands
   late final Command0<List<TransactionEntity>, Failure> load;
@@ -64,7 +54,7 @@ class HomePageController {
   late final Command1<void, Failure, String> deleteTransaction;
   late final Command2<List<TransactionEntity>, Failure, DateTime, DateTime>
   searchTransactionsByDate;
-  //late final Command0<void, void> loadSample;
+  late final Command1<void, Failure, TransactionEntity> updateTransaction;
 
   // signals
   final Signal<List<TransactionEntity>> _transactions = Signal([]);
@@ -161,7 +151,6 @@ class HomePageController {
         transaction: last,
       ));
 
-
       if (result.isSuccess) {
         final list = [..._transactions.value];
         list.insert(index, last);
@@ -198,6 +187,31 @@ class HomePageController {
       onFailure: (failure) => print('Erro ao excluir transação: $failure'),
     );
 
+    return result;
+  }
+
+  // Atualiza transação
+  Future<Result<void, Failure>> _updateTransaction(
+    TransactionEntity transaction,
+  ) async {
+    final result = await _transactionsUseCases.updateTransaction.call((
+      transaction: transaction,
+    ));
+
+    if (result.isSuccess) {
+      final index = _transactions.value.indexWhere(
+        (t) => t.id == transaction.id,
+      );
+
+      if (index != -1) {
+        final newList = [..._transactions.value];
+        _transactions.value = newList;
+      } else {
+        return Error(
+          RecordNotFound("Transação não encontrada para atualização"),
+        );
+      }
+    }
     return result;
   }
 
