@@ -118,4 +118,20 @@ class TransactionFakeServiceImpl implements TransactionStorageContract {
       return Error(DefaultError('Erro ao Transações: ${e.toString()}'));
     }
   }
+
+  Future<Result<void, Failure>> updateTransaction(
+    TransactionEntity transaction,
+  ) async {
+    try {
+      await _api.updateData(transaction.toJson());
+
+      return Success(null);
+    } on InvalidData catch (e) {
+      return Error(InvalidData('Na atualização: ${e.toString()}'));
+    } on APIFailure catch (e) {
+      return Error(APIFailure(e.toString()));
+    } on Exception catch (e) {
+      return Error(DefaultError('Erro ao atualizar a transação: ${e.toString()}'));
+    }
+  }
 }
