@@ -81,12 +81,28 @@ class TransactionFakeRepository {
     return jsonEncode(filteredTransactions.map((e) => e.toMap()).toList());
   }
 
-  // Future<bool> updateData(String studentJson) async {
-  //   try {
-  //     student = StudentInfoEntity.fromJson(studentJson);
-  //     return true;
-  //   } catch (e) {
-  //     throw APIFailureOnSave('erro ao salvar: ${e.toString()}');
-  //   }
-  // }
+Future<bool> updateData(String transactionJson) async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (Random().nextBool()) {
+      Random().nextBool()
+          ? throw APIFailure(MessagesError.apiError)
+          : throw InvalidData(MessagesError.recordInvalidFormat);
+    }
+
+    if (transactionJson.isEmpty) {
+      throw InvalidData(MessagesError.recordInvalidFormat);
+    }
+
+    final transaction = TransactionEntity.fromMap(jsonDecode(transactionJson));
+    final index = transactions.indexWhere(
+      (element) => element.id == transaction.id,
+    );
+
+    if (index == -1) {
+      throw RecordNotFound(MessagesError.recordNotFound);
+    }
+    transactions[index] = transaction;
+    return true;
+  }
 }
